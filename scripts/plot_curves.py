@@ -38,8 +38,26 @@ def main():
     ea.Reload()
     tags = ea.Tags()["scalars"]
 
-    def plot(tag, subplot, ylabel, color="C0"):
-        if tag not in tags:
+    # 兼容 legged_gym 与 mjlab 两套 tag 命名
+    TAG_ALIASES = {
+        "Train/mean_reward": ("Train/mean_reward",),
+        "Train/mean_episode_length": ("Train/mean_episode_length",),
+        "Episode/rew_tracking_lin_vel": ("Episode/rew_tracking_lin_vel", "Episode_Reward/track_linear_velocity"),
+        "Episode/rew_tracking_ang_vel": ("Episode/rew_tracking_ang_vel", "Episode_Reward/track_angular_velocity"),
+        "Episode/terrain_level": ("Episode/terrain_level", "Curriculum/terrain_levels/mean"),
+        "Policy/mean_noise_std": ("Policy/mean_noise_std",),
+        "Metrics/error_vel_xy": ("Metrics/error_vel_xy", "Metrics/twist/error_vel_xy"),
+    }
+
+    def resolve(primary):
+        for alias in TAG_ALIASES.get(primary, (primary,)):
+            if alias in tags:
+                return alias
+        return None
+
+    def plot(primary, subplot, ylabel, color="C0"):
+        tag = resolve(primary)
+        if tag is None:
             return
         x, y = load_scalar(ea, tag)
         ax = subplot
@@ -63,6 +81,9 @@ def main():
     plot("Episode/rew_tracking_ang_vel", axes[3], "reward", "C3")
     plot("Episode/terrain_level", axes[4], "level", "C4")
     plot("Policy/mean_noise_std", axes[5], "std", "C5")
+    # 没有总奖励 tag 时用速度跟踪误差替代第 6 格
+    if resolve("Train/mean_reward") is None:
+        plot("Metrics/error_vel_xy", axes[5], "err", "C5")
     if args.title:
         fig.suptitle(args.title, fontsize=14)
     fig.tight_layout(rect=[0, 0, 1, 0.96])

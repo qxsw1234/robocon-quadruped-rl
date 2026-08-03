@@ -39,6 +39,9 @@ def unitree_a1_rough_env_cfg(
   """Create Unitree A1 rough terrain velocity configuration."""
   cfg = make_velocity_env_cfg()
 
+  # 注意：不要在训练 cfg 里调大 sim.nconmax —— 它会按环境数放大显存占用
+  #（2048 envs 下 nconmax=300 会需要 ~18GB）。训练默认值足够；
+  # 评估/回放（play 模式）时接触对更多，在 eval_mjlab.py 里按需设置。
   cfg.sim.mujoco.ccd_iterations = 500
   cfg.sim.mujoco.impratio = 10
   cfg.sim.mujoco.cone = "elliptic"
