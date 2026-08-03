@@ -27,36 +27,42 @@ def get_spec() -> mujoco.MjSpec:
 
 
 ##
-# Actuator config (与 legged_gym A1RoughCfg 一致: stiffness=20, damping=0.5).
+# Actuator config.
+#
+# 与 mjlab 自带 Go1 相同的推导方案（转子惯量 × 减速比 → 10Hz 自然频率 → PD 增益）。
+# 之前用 legged_gym 的 kp=20/kd=0.5 阻尼过低（Go1 为 1.0~2.3），关节振荡导致
+# 走路失控、策略退化为"站着不动"的局部最优。
 ##
 
-A1_STIFFNESS = 20.0   # [N*m/rad]
-A1_DAMPING = 0.5      # [N*m*s/rad]
-A1_EFFORT_LIMIT = 33.5  # [Nm] (Unitree A1 电机峰值力矩)
+NATURAL_FREQ = 10 * 2.0 * 3.1415926535  # 10Hz（与 Go1 一致）
+DAMPING_RATIO = 2.0
 
-# 转子惯量/减速比（Unitree A1 公开资料，近似值，仅用于 armature）
-ROTOR_INERTIA = 0.000046
-HIP_GEAR_RATIO = 6.33
-KNEE_GEAR_RATIO = 9.5
+# Unitree A1 电机参数（公开资料近似值）
+ROTOR_INERTIA = 0.000111842  # 与 Go1 相同（对照实验 v4）
+HIP_GEAR_RATIO = 6.0  # 与 Go1 相同（对照实验 v4）
+KNEE_GEAR_RATIO = 9.0  # 与 Go1 相同（对照实验 v4）
 
 
 def _reflected_inertia(inertia: float, gear: float) -> float:
   return inertia * gear * gear
 
 
+HIP_REFLECTED = _reflected_inertia(ROTOR_INERTIA, HIP_GEAR_RATIO)
+KNEE_REFLECTED = _reflected_inertia(ROTOR_INERTIA, KNEE_GEAR_RATIO)
+
 A1_HIP_ACTUATOR_CFG = BuiltinPositionActuatorCfg(
   target_names_expr=(r".*_hip_joint", r".*_thigh_joint"),
-  stiffness=A1_STIFFNESS,
-  damping=A1_DAMPING,
-  effort_limit=A1_EFFORT_LIMIT,
-  armature=_reflected_inertia(ROTOR_INERTIA, HIP_GEAR_RATIO),
+  stiffness=HIP_REFLECTED * NATURAL_FREQ**2,
+  damping=2 * DAMPING_RATIO * HIP_REFLECTED * NATURAL_FREQ,
+  effort_limit=33.5,  # [Nm] Unitree A1 电机峰值力矩
+  armature=HIP_REFLECTED,
 )
 A1_KNEE_ACTUATOR_CFG = BuiltinPositionActuatorCfg(
   target_names_expr=(r".*_calf_joint",),
-  stiffness=A1_STIFFNESS,
-  damping=A1_DAMPING,
-  effort_limit=A1_EFFORT_LIMIT,
-  armature=_reflected_inertia(ROTOR_INERTIA, KNEE_GEAR_RATIO),
+  stiffness=KNEE_REFLECTED * NATURAL_FREQ**2,
+  damping=2 * DAMPING_RATIO * KNEE_REFLECTED * NATURAL_FREQ,
+  effort_limit=33.5,
+  armature=KNEE_REFLECTED,
 )
 
 ##
