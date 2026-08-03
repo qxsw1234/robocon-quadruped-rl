@@ -12,25 +12,30 @@ import os
 import sys
 import argparse
 import numpy as np
+
+import isaacgym  # 必须在 torch 之前导入（Isaac Gym 检查）
 import torch
 
-import isaacgym
 from legged_gym.envs import *
 from legged_gym.utils import get_args, task_registry
 
 
 def main():
-    # 复用 legged_gym 的 args 解析，再加演示参数（需显式传 sys.argv，因为 get_args 已消费一次）
-    args = get_args()
+    # 先解析自定义演示参数，再从 sys.argv 中剔除，避免干扰 legged_gym 的 get_args
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--mode", type=str, default="stand", choices=["stand", "walk"])
     parser.add_argument("--vx", type=float, default=1.0, help="walk 模式下的目标线速度 [m/s]")
     parser.add_argument("--steps", type=int, default=1000, help="运行的仿真步数（policy 步）")
-    demo_args, _ = parser.parse_known_args(sys.argv[1:])
+    parser.add_argument("--flat", action="store_true", help="使用纯平地地形（演示用，避免粗糙地形摔倒）")
+    demo_args, remaining = parser.parse_known_args(sys.argv[1:])
+    sys.argv = [sys.argv[0]] + remaining
+    args = get_args()
 
     env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
     # 覆盖部分参数用于测试/演示
     env_cfg.env.num_envs = min(env_cfg.env.num_envs, 50)
+    if demo_args.flat:
+        env_cfg.terrain.mesh_type = 'plane'   # 纯平地
     env_cfg.terrain.num_rows = 5
     env_cfg.terrain.num_cols = 5
     env_cfg.terrain.curriculum = False
@@ -82,8 +87,8 @@ def main():
     # ---- 结果统计 ----
     vx_actual_mean = vx_actual.mean(dim=0)
     vx_error = torch.abs(vx_actual_mean - vx_cmd)
-    # 距离：取最后一步的位移（线性化，不追踪旋转，仅统计）
-    dist = torch.sqrt(pos_x[-1] ** 2 + pos_y[-1] ** 2)
+    # 距离：episode 内相对位移（按速度累计，不受重置/初始位置影响）
+    dist = (vx_actual.abs() * sim_dt).sum(dim=0)  # 沿 x 轴的累计行进距离
     ep_len_mean = env.episode_length_buf.float().mean().item()
 
     print("=" * 60)

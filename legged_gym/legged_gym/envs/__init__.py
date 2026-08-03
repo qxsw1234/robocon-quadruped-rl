@@ -38,6 +38,9 @@ from .anymal_b.anymal_b_config import AnymalBRoughCfg, AnymalBRoughCfgPPO
 from .cassie.cassie import Cassie
 from .cassie.cassie_config import CassieRoughCfg, CassieRoughCfgPPO
 from .a1.a1_config import A1RoughCfg, A1RoughCfgPPO
+from .a1.a1_config_exp import (A1NoVelTrackingCfg, A1NoVelTrackingCfgPPO,
+                               A1NoFeetAirCfg, A1NoFeetAirCfgPPO,
+                               A1HighTorquePenCfg, A1HighTorquePenCfgPPO)
 
 
 import os
@@ -48,4 +51,8 @@ task_registry.register( "anymal_c_rough", Anymal, AnymalCRoughCfg(), AnymalCRoug
 task_registry.register( "anymal_c_flat", Anymal, AnymalCFlatCfg(), AnymalCFlatCfgPPO() )
 task_registry.register( "anymal_b", Anymal, AnymalBRoughCfg(), AnymalBRoughCfgPPO() )
 task_registry.register( "a1", LeggedRobot, A1RoughCfg(), A1RoughCfgPPO() )
+# 奖励修改实验任务（考核要求 5）：单变量修改，其余同 A1 基线
+task_registry.register( "a1_no_vel_tracking", LeggedRobot, A1NoVelTrackingCfg(), A1NoVelTrackingCfgPPO() )
+task_registry.register( "a1_no_feet_air", LeggedRobot, A1NoFeetAirCfg(), A1NoFeetAirCfgPPO() )
+task_registry.register( "a1_high_torque_pen", LeggedRobot, A1HighTorquePenCfg(), A1HighTorquePenCfgPPO() )
 task_registry.register( "cassie", Cassie, CassieRoughCfg(), CassieRoughCfgPPO() )
