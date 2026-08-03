@@ -6,7 +6,7 @@
 
   <default>
     <default class="a1">
-      <geom friction="0.6" margin="0.001" />
+      <geom friction="0.6" margin="0" />
       <joint axis="0 1 0" damping="2" armature="0.01" frictionloss="0.2" />
       <position kp="100" forcerange="-33.5 33.5" />
       <default class="abduction">
@@ -169,7 +169,7 @@
           <site name="RL" pos="0 0 -0.2" size="0.01" /></body>
         </body>
       </body>
-    </body>
+    <site name="imu" pos="0 0 0" group="5" /></body>
   </worldbody>
 
   <actuator>
@@ -190,4 +190,4 @@
   <keyframe>
     <key name="home" qpos="0 0 0.27 1 0 0 0 0 0.9 -1.8 0 0.9 -1.8 0 0.9 -1.8 0 0.9 -1.8" ctrl="0 0.9 -1.8 0 0.9 -1.8 0 0.9 -1.8 0 0.9 -1.8" />
   </keyframe>
-</mujoco>
+<sensor><gyro name="imu_ang_vel" site="imu" /><velocimeter name="imu_lin_vel" site="imu" /><accelerometer name="imu_lin_acc" site="imu" /><framezaxis name="imu_upvector" objtype="body" objname="world" reftype="site" refname="imu" /><subtreeangmom name="root_angmom" body="trunk" /></sensor></mujoco>
