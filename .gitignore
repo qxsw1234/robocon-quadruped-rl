@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# 训练产物（体积大，不入库；曲线截图放 results/）
+legged_gym/logs/
+logs/
+
+# 模型/安装包
+*.pt
+*.pth
+*.whl
+*.tar.gz
+pkg/
+
+# 系统
+.DS_Store
+*.swp
+
+# 工具/会话文件
+.zcode/
+
+# 考核题目 PDF（不属于源码，不入库）
+*.pdf
