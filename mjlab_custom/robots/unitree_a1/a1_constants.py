@@ -60,16 +60,19 @@ A1_KNEE_ACTUATOR_CFG = BuiltinPositionActuatorCfg(
 )
 
 ##
-# Keyframes（与 legged_gym A1 默认关节角一致）。
+# Keyframes.
+#
+# 注意：init_state.pos 是 free joint（trunk body 原点）的世界位置。
+# menagerie a1.xml 的 trunk body 自带 pos="0 0 0.43" 偏移，其 home keyframe
+# 的 free joint z=0.27（脚着地的站姿）。之前误用 legged_gym 的 0.42 导致
+# 机器人悬空 ~0.57m 自由落体（能站稳但学不会走）。
 ##
 
 INIT_STATE = EntityCfg.InitialStateCfg(
-  pos=(0.0, 0.0, 0.42),
+  pos=(0.0, 0.0, 0.27),  # menagerie home keyframe 站姿高度
   joint_pos={
     r".*thigh_joint": 0.9,
-    r".*calf_joint": -1.5,
-    r".*R_hip_joint": -0.1,
-    r".*L_hip_joint": 0.1,
+    r".*calf_joint": -1.8,
   },
   joint_vel={r".*": 0.0},
 )
