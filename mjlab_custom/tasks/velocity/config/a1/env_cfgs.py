@@ -206,6 +206,13 @@ def unitree_a1_rough_env_cfg(
     r".*(FR|FL|RR|RL)_calf_joint.*": 0.6,
   }
 
+  # A1 专属：加强姿态/倾角约束，压制"蹲着不动"的局部最优（排查见开发记录）
+  cfg.rewards["pose"].weight = 5.0
+  cfg.rewards["upright"].weight = 2.0
+  cfg.terminations["fell_over"] = TerminationTermCfg(
+    func=mdp.bad_orientation,
+    params={"limit_angle": math.radians(55.0)},
+  )
   cfg.rewards["upright"].params["asset_cfg"].body_names = ("trunk",)
   cfg.rewards["upright"].params["terrain_sensor_names"] = ("terrain_scan",)
   cfg.rewards["body_ang_vel"].params["asset_cfg"].body_names = ("trunk",)

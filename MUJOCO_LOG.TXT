@@ -126,3 +126,15 @@ WARNING Tue Aug  4 03:07:58 2026: Attach conflict when attaching 'a1' to 'mjlab 
 impratio: parent has 1, child has 100, keeping parent value
 cone: parent has 0, child has 1, keeping parent value
 
+WARNING Tue Aug  4 03:35:23 2026: Attach conflict when attaching 'a1' to 'mjlab scene', policy is 'warning'
+impratio: parent has 1, child has 100, keeping parent value
+cone: parent has 0, child has 1, keeping parent value
+
+WARNING Tue Aug  4 03:35:55 2026: Attach conflict when attaching 'a1' to 'mjlab scene', policy is 'warning'
+impratio: parent has 1, child has 100, keeping parent value
+cone: parent has 0, child has 1, keeping parent value
+
+WARNING Tue Aug  4 03:37:34 2026: Attach conflict when attaching 'a1' to 'mjlab scene', policy is 'warning'
+impratio: parent has 1, child has 100, keeping parent value
+cone: parent has 0, child has 1, keeping parent value
+

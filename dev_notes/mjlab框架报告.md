@@ -51,7 +51,7 @@ python -m mjlab.scripts.train "Mjlab-Velocity-Rough-Unitree-Go1" \
 ### 3.2 自定义任务：A1（12 自由度）速度跟踪
 
 ```bash
-python -m mjlab.scripts.train "Mjlab-Velocity-Rough-Unitree-A1" \
+python -m mjlab.scripts.train "Mjlab-Velocity-Flat-Unitree-A1" \
     --env.scene.num-envs 2048 --agent.logger tensorboard \
     --agent.max-iterations 2000
 ```
@@ -59,12 +59,39 @@ python -m mjlab.scripts.train "Mjlab-Velocity-Rough-Unitree-A1" \
 | 指标 | 值 |
 |---|---|
 | 环境数 | 2048 |
-| 迭代数 | 2000（继续训练至 4000 中） |
+| 迭代数 | 2000（rough 版另有 2000-4000 迭代的 3 组实验） |
 | 总环境步数 | 98,304,000 / 段 |
-| 训练耗时 | 3125s ≈ 52 分钟 / 段 |
-| 速度跟踪奖励 | 0.002 → 0.562（持续上升，续训中） |
-| upright 奖励 | 0.01 → 0.94（已学会稳定站立） |
-| 行为验证 | 2000 迭代时处于"学会站、学走中"阶段 → 续训 2000 迭代后再验证 |
+| 训练耗时 | ~52 分钟 / 段 |
+| 速度跟踪奖励 | 0.5-0.7（见下"排查结论"） |
+| upright 奖励 | 0.98（学会稳定站立） |
+| 行为验证 | 稳定站立 ✅；行走未达成 ⚠️ |
+
+### 3.3 A1 在 mjlab 中"学不会走"的排查（重要过程记录）
+
+**结果**：A1（menagerie MJCF）在 mjlab 中无论怎么调参都停留在"站立/蹲着不动"（track_linear 卡在 0.5-0.7 的不动保底值）；**同配置下 Go1 正常学会行走（1.41）**，且 **A1 在 legged_gym（Isaac Gym）中正常学会行走**（见 3.1）。
+
+**系统性排查（5 组实验，每组 300-2000 迭代）**：
+
+| 版本 | 修改 | 结果 |
+|---|---|---|
+| v1 | 初始姿态 0.42（legged_gym 值） | 悬空自由落体，4000 迭代学不会走 |
+| v2 | 初始姿态修正（menagerie keyframe 0.27） | 站姿正常，仍不动 |
+| v3 | PD 改为电机推导值（kp 7-16） | 仍不动 |
+| v4 | PD 与 Go1 完全同构（kp 16-36, kd 1-2.3） | 早期正常，~700 迭代后回落 |
+| v5 | + 移除关节摩擦 + pose 权重×5 + fell_over 55° | 仍不动（蹲姿不被惩罚） |
+
+**定位的根因（逐步排除）**：
+1. 初始姿态：legged_gym 的站姿高度不能跨模型套用（menagerie trunk body 有 0.43 偏移）→ 已修复
+2. 终止条件：rough 的 illegal_contact（大腿碰地）过严会抑制探索 → flat 任务（无此终止）仍然不动 → 排除
+3. PD 参数/动作尺度：与 Go1 同构后仍不动 → 排除
+4. **剩余差异：menagerie A1 模型本身**（腿长 0.285m 比 Go1 的 0.293m 短；惯性参数为估算值）。假设：该模型参数在 MuJoCo 物理下动态行走稳定性差，策略收敛到"站立不动"的局部最优。legged_gym 中 A1 能走（官方 URDF 参数 + Isaac Gym PhysX），也支持"模型/物理差异"的假设。
+
+**工程教训**：
+1. 训练指标卡在"不动保底值"（track_linear ≈ E[exp(-cmd²/σ²)]）是局部最优的典型信号
+2. 终止条件比奖励项更能决定"敢不敢探索"（rough 的 illegal_contact 实验）
+3. 接入新机器人优先用官方模型/官方参数，跨模型套用站姿、PD 都会出问题
+4. 机器人本体参数（腿长、惯性）对可学习性影响巨大，需要模型消融实验验证
+5. 框架接入流程（MJCF→常量→环境→注册→训练→评估）已完整跑通，替换成战队自研模型（官方参数）即可复用
 
 训练曲线：`results/curves/mjlab_go1.png`、`results/curves/mjlab_a1.png`
 

@@ -7,7 +7,7 @@
   <default>
     <default class="a1">
       <geom friction="0.6" margin="0" />
-      <joint axis="0 1 0" damping="2" armature="0.01" frictionloss="0.2" />
+      <joint axis="0 1 0" damping="2" armature="0.01" frictionloss="0" />
       <position kp="100" forcerange="-33.5 33.5" />
       <default class="abduction">
         <joint axis="1 0 0" damping="1" range="-0.802851 0.802851" />
