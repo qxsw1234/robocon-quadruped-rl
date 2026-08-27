@@ -25,3 +25,8 @@ pkg/
 *.pdf
 空白文档.txt
 *.zip
+
+# 私人提交材料（包含联系方式，仅进入邮件 ZIP，不推送公开仓库）
+1.基本信息：.md
+submission_docs/
+ROS2.md

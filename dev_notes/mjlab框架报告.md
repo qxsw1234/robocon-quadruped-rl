@@ -104,7 +104,7 @@ python -m mjlab.scripts.train "Mjlab-Velocity-Flat-Unitree-A1" \
 | 环境 API | 类继承 + 嵌套 config | dataclass + Manager（观测/奖励/事件组件化） |
 | 任务注册 | task_registry.register | register_mjlab_task |
 | 自定义机器人 | URDF + 继承 config 类 | MJCF + 常量文件 + env_cfg 工厂 |
-| 训练吞吐（2048 envs） | ~61k steps/s（4096 envs 时） | （待填） |
+| 训练吞吐 | ~61k steps/s（4096 envs） | Go1 实测约 35k steps/s（2048 envs，98,304,000 步 / 2791 s） |
 | 奖励设计 | scales 字典 + _reward_xxx 函数 | RewardTermCfg 组件 |
 | 地形课程 | 内置（terrain curriculum） | 内置（多地形类型） |
 | 日志 | TensorBoard | TensorBoard / W&B |
@@ -114,10 +114,10 @@ python -m mjlab.scripts.train "Mjlab-Velocity-Flat-Unitree-A1" \
 
 - 自研机器人接入只需：MJCF/URDF→MJCF 转换（或直接 MJCF）→ 替换 `robots/` 下模型 → 调整常量（关节名、PD 增益、初始姿态、脚部几何）→ 注册任务
 - 若战队提供 URDF，可用 MuJoCo 的 URDF 导入（`mujoco.MjSpec` 或 menagerie 工具）快速转成 MJCF
-- 本项目用开源 A1（同为 12 自由度）完整走通了上述流程，训练成功（见 3.2）
+- 本项目用开源 A1（同为 12 自由度）完整走通了上述流程并完成多组实际训练；稳定站立已达成，动态行走未达成，失败现象与排查过程见 3.3
 
 ## 6. UniLab（备选框架，视时间）
 
 UniLab（unilabsim/UniLab）：CPU 仿真 + GPU 训练的异构框架，支持 PPO/APPO/SAC 等，
 内置 Go2/Go1 四足任务。项目很新（2026-02），自定义机器人文档缺失，风险高，作为备选。
-（未完成则如实说明）
+本次未实施 UniLab；时间优先用于完成 mjlab 的训练、评估和 A1 问题排查闭环。
