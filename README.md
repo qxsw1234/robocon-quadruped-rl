@@ -85,19 +85,24 @@ python legged_gym/legged_gym/scripts/play.py --task=a1
 | 站立 | 命令 0 时零摔倒，速度误差 0.003 m/s |
 | 平地行走（vx=1.0） | **0.999 m/s，误差 0.35%，100% 达标** |
 | 粗糙地形行走（vx=1.0） | 0.88-0.95 m/s，84% 达标（32 机器人统计） |
-| 演示视频 | results/videos/（站立 / 平地行走 / 粗糙地形行走） |
+| 演示视频 | `results/videos/demo_assessment_stand_walk.mp4`（一个视频连续展示站立与直线行走） |
 
 训练曲线见 [results/curves/](results/curves/)，奖励实验见 [dev_notes/奖励实验分析.md](dev_notes/奖励实验分析.md)，训练原理见 [dev_notes/训练原理说明.md](dev_notes/训练原理说明.md)。
 
 ## 演示视频
 
-| 视频 | 内容 | 命令 |
+| 视频 | 内容 | 本次回放结果 |
 |---|---|---|
-| `results/videos/demo_stand.mp4` | 稳定站立（平地，4 机器人，12s） | vx=0 |
-| `results/videos/demo_walk.mp4` | 直线行走（平地，4 机器人，12s） | vx=1.0 m/s |
-| `results/videos/demo_walk_rough.mp4` | 粗糙地形行走（含坡道/台阶） | vx=1.0 m/s |
+| `results/videos/demo_assessment_stand_walk.mp4` | 单个 A1 在平地先稳定站立 8s，再按 `vx=1.0 m/s, vy=0, yaw=0` 直线行走 10s | 站立平均 vx=-0.008 m/s；行走平均 vx=0.993 m/s；误差 0.0072 m/s；0 摔倒/重置 |
 
-录制方式：`python scripts/play_demo.py --task=a1 --mode=walk --vx=1.0 --flat`（viewer 回放）+ ffmpeg 录屏，见 `scripts/record_demo.sh`。
+视频为 26s、1600×720、25fps，包含标题、阶段指令和末尾实测统计。策略加载自本机实际训练的 `model_3000.pt`，不是开源预训练模型。回放命令：
+
+```bash
+python scripts/play_demo.py --task=a1 --mode=assessment --vx=1.0 \
+  --steps=900 --stand-steps=400 --num_envs=1 --flat --follow-camera
+```
+
+`scripts/play_demo.py` 支持直接导出 viewer PNG 帧；最终视频使用 `scripts/assessment_video_filter.txt` 加入阶段与统计标注。
 
 ## 奖励实验（考核要求 5）
 

@@ -1,0 +1,22 @@
+[1:v]format=yuv420p,
+drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc:text='2026 川山甲战队视觉组正式队员考核':fontcolor=white:fontsize=48:x=(w-text_w)/2:y=150,
+drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc:text='方向三：四足机器人强化学习':fontcolor=0x60A5FA:fontsize=42:x=(w-text_w)/2:y=235,
+drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc:text='Unitree A1 稳定站立与直线行走':fontcolor=white:fontsize=54:x=(w-text_w)/2:y=320,
+drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc:text='PPO 策略 · 本机实际训练 · model_3000.pt':fontcolor=0xA7F3D0:fontsize=30:x=(w-text_w)/2:y=420[title];
+
+[0:v]crop=1600:720:0:180,format=yuv420p,
+drawbox=x=20:y=18:w=1560:h=112:color=black@0.58:t=fill,
+drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc:text='Unitree A1 | legged_gym + PPO | model_3000.pt':fontcolor=white:fontsize=25:x=42:y=31,
+drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc:text='阶段 1/2：稳定站立 | vx_cmd = 0.0 m/s':fontcolor=0x86EFAC:fontsize=34:x=42:y=76:enable='between(t,0,8)',
+drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc:text='阶段 2/2：直线行走 | vx_cmd = 1.0 m/s · vy = 0 · yaw = 0':fontcolor=0xFDE68A:fontsize=34:x=42:y=76:enable='gte(t,8)',
+drawbox=x=20:y=660:w=1560:h=42:color=black@0.55:t=fill,
+drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc:text='单机器人 · 平地 · 训练策略回放 · 无外部遥控输入':fontcolor=white:fontsize=23:x=42:y=669[demo];
+
+[2:v]format=yuv420p,
+drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc:text='本次回放实测结果':fontcolor=white:fontsize=52:x=(w-text_w)/2:y=115,
+drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc:text='稳定站立 8.0 s | 平均 vx = -0.008 m/s':fontcolor=0x86EFAC:fontsize=36:x=(w-text_w)/2:y=225,
+drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc:text='直线行走 10.0 s | 目标 vx = 1.000 m/s':fontcolor=0xFDE68A:fontsize=36:x=(w-text_w)/2:y=300,
+drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc:text='实际 vx = 0.993 m/s | 误差 0.0072 m/s | 摔倒/重置 0':fontcolor=white:fontsize=36:x=(w-text_w)/2:y=375,
+drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc:text='训练曲线、步数、奖励实验与原理说明见项目文档':fontcolor=0x93C5FD:fontsize=28:x=(w-text_w)/2:y=485[outro];
+
+[title][demo][outro]concat=n=3:v=1:a=0[v]

@@ -25,6 +25,8 @@ mkdir -p \
 
 # 0. 私人提交说明（包含联系方式，仅进入邮件 ZIP）。
 rsync -a "$QUADRUPED_ROOT/submission_docs/" "$SUBMISSION_ROOT/00-提交说明/"
+cp "$NAV_ROOT/docs/ros2_learning_notes.md" \
+  "$SUBMISSION_ROOT/00-提交说明/ROS2学习笔记.md"
 
 # 1. AprilTag 位姿估计与 AR：源码、打印物料、离线验证和开发记录。
 rsync -a \
@@ -38,6 +40,7 @@ rsync -a \
   --exclude '.git/' --exclude 'build/' --exclude 'install/' --exclude 'log/' \
   --exclude '__pycache__/' --exclude '*.pyc' --exclude '*.db3' --exclude '*.mcap' \
   --exclude 'results/videos/demo_navigation_rviz.mp4' \
+  --exclude 'results/videos/demo_navigation_rviz_labeled.mp4' \
   "$NAV_ROOT/" "$SUBMISSION_ROOT/02-方向二-自主导航/"
 cp "$NAV_ROOT/results/videos/demo_navigation_rviz_labeled.mp4" \
   "$SUBMISSION_ROOT/02-方向二-自主导航/results/videos/demo_navigation_rviz.mp4"
@@ -58,7 +61,9 @@ rsync -a "$QUADRUPED_ROOT/scripts/" "$Q_DEST/scripts/"
 rsync -a "$QUADRUPED_ROOT/dev_notes/" "$Q_DEST/dev_notes/"
 mkdir -p "$Q_DEST/results"
 rsync -a "$QUADRUPED_ROOT/results/curves/" "$Q_DEST/results/curves/"
-rsync -a "$QUADRUPED_ROOT/results/videos/" "$Q_DEST/results/videos/"
+mkdir -p "$Q_DEST/results/videos"
+cp "$QUADRUPED_ROOT/results/videos/demo_assessment_stand_walk.mp4" \
+  "$Q_DEST/results/videos/demo_assessment_stand_walk.mp4"
 
 # 清理所有方向中不应提交的缓存和空构建产物。
 find "$SUBMISSION_ROOT" -type d \( -name '__pycache__' -o -name '.pytest_cache' -o -name '*.egg-info' \) \
@@ -78,4 +83,3 @@ fi
 zip -T "$FINAL_ZIP"
 printf 'Final ZIP: %s\n' "$FINAL_ZIP"
 du -h "$FINAL_ZIP"
-

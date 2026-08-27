@@ -3,9 +3,10 @@
 # Modified by 川山甲战队考核项目 (2026) — 添加固定速度命令的评估/演示功能
 #
 # 用法:
-#   python play_demo.py --task=a1 [--mode stand|walk] [--vx 1.0] [--steps 1000] [--num_envs 1] [--headless]
+#   python play_demo.py --task=a1 [--mode stand|walk|assessment] [--vx 1.0] [--steps 1000] [--num_envs 1] [--headless]
 #   --mode stand: 命令速度 = 0（演示稳定站立）
 #   --mode walk : 命令速度 = (vx, 0, 0)，直线行走
+#   --mode assessment: 先站立，再切换到直线行走，适合录制一个完整考核视频
 #   输出: 速度跟踪误差、行走距离、摔倒次数等定量指标（写入 stdout）
 
 import os
@@ -23,10 +24,14 @@ from legged_gym.utils import get_args, task_registry
 def main():
     # 先解析自定义演示参数，再从 sys.argv 中剔除，避免干扰 legged_gym 的 get_args
     parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument("--mode", type=str, default="stand", choices=["stand", "walk"])
+    parser.add_argument("--mode", type=str, default="stand", choices=["stand", "walk", "assessment"])
     parser.add_argument("--vx", type=float, default=1.0, help="walk 模式下的目标线速度 [m/s]")
     parser.add_argument("--steps", type=int, default=1000, help="运行的仿真步数（policy 步）")
+    parser.add_argument("--stand-steps", type=int, default=400, help="assessment 模式的站立阶段步数")
     parser.add_argument("--flat", action="store_true", help="使用纯平地地形（演示用，避免粗糙地形摔倒）")
+    parser.add_argument("--follow-camera", action="store_true", help="viewer 摄像机跟随第一个机器人")
+    parser.add_argument("--frame-dir", type=str, default="", help="将 viewer 画面保存为 PNG 序列的目录")
+    parser.add_argument("--frame-stride", type=int, default=2, help="每隔多少个 policy 步保存一帧")
     demo_args, remaining = parser.parse_known_args(sys.argv[1:])
     sys.argv = [sys.argv[0]] + remaining
     args = get_args()
@@ -53,6 +58,8 @@ def main():
     # ---- 固定命令设置 ----
     mode = demo_args.mode
     vx_cmd = demo_args.vx if mode == "walk" else 0.0
+    if mode == "assessment" and not 0 < demo_args.stand_steps < demo_args.steps:
+        raise ValueError("assessment 模式要求 0 < --stand-steps < --steps")
     print(f"[play_demo] mode={mode}, vx_cmd={vx_cmd:.2f} m/s, num_envs={env_cfg.env.num_envs}, headless={args.headless}")
 
     # 清除命令随机重采样（固定命令，不随 episode 重采样）
@@ -61,6 +68,13 @@ def main():
     sim_dt = env.dt  # policy 步长（decimation 之后）
     n_steps = demo_args.steps
     n_robots = env_cfg.env.num_envs
+    frame_index = 0
+    if demo_args.frame_dir:
+        if args.headless:
+            raise ValueError("--frame-dir 需要 viewer，不能与 --headless 同时使用")
+        if demo_args.frame_stride < 1:
+            raise ValueError("--frame-stride 必须大于等于 1")
+        os.makedirs(demo_args.frame_dir, exist_ok=True)
 
     # 统计量
     vx_actual = torch.zeros(n_steps, n_robots, device=env.device)
@@ -70,7 +84,19 @@ def main():
     ep_lens = torch.zeros(n_robots, device=env.device)
     dead_robots = torch.zeros(n_robots, dtype=torch.bool, device=env.device)
 
+    if demo_args.follow_camera and not args.headless:
+        base = env.root_states[0, :3].detach().cpu().numpy()
+        env.set_camera(
+            [base[0] - 1.25, base[1] - 1.65, base[2] + 0.85],
+            [base[0] + 0.15, base[1], base[2] + 0.12],
+        )
+
     for i in range(n_steps):
+        if mode == "assessment":
+            vx_cmd = 0.0 if i < demo_args.stand_steps else demo_args.vx
+            if i == demo_args.stand_steps:
+                print(f"[play_demo] 切换为直线行走阶段: vx_cmd={vx_cmd:.2f} m/s")
+        env.commands[:] = torch.tensor([vx_cmd, 0.0, 0.0, 0.0], device=env.device)
         actions = policy(obs.detach())
         obs, _, rews, dones, infos = env.step(actions.detach())
         # 每步重新固定命令（防止 env 内部重采样覆盖）
@@ -83,10 +109,21 @@ def main():
             new_eps = dones & ~dead_robots
             falls[new_eps] += 1
             dead_robots |= dones
+        if demo_args.follow_camera and not args.headless and i % 2 == 0:
+            base = env.root_states[0, :3].detach().cpu().numpy()
+            env.set_camera(
+                [base[0] - 1.25, base[1] - 1.65, base[2] + 0.85],
+                [base[0] + 0.15, base[1], base[2] + 0.12],
+            )
+        if demo_args.frame_dir and i % demo_args.frame_stride == 0:
+            frame_path = os.path.join(demo_args.frame_dir, f"frame_{frame_index:06d}.png")
+            env.gym.write_viewer_image_to_file(env.viewer, frame_path)
+            frame_index += 1
 
     # ---- 结果统计 ----
     vx_actual_mean = vx_actual.mean(dim=0)
-    vx_error = torch.abs(vx_actual_mean - vx_cmd)
+    final_vx_cmd = demo_args.vx if mode in ("walk", "assessment") else 0.0
+    vx_error = torch.abs(vx_actual_mean - final_vx_cmd)
     # 距离：episode 内相对位移（按速度累计，不受重置/初始位置影响）
     dist = (vx_actual.abs() * sim_dt).sum(dim=0)  # 沿 x 轴的累计行进距离
     ep_len_mean = env.episode_length_buf.float().mean().item()
@@ -94,12 +131,23 @@ def main():
     print("=" * 60)
     print(f"[play_demo] 结果（{n_steps} policy 步 ≈ {n_steps * sim_dt:.1f} s 仿真时间）")
     print(f"  机器人数量: {n_robots}")
-    print(f"  实际平均线速度 vx: {vx_actual_mean.mean().item():.3f} m/s")
-    print(f"  速度跟踪误差 |vx_cmd - vx|: {vx_error.mean().item():.4f} m/s")
+    if mode == "assessment":
+        stand_vx = vx_actual[:demo_args.stand_steps].mean().item()
+        walk_vx = vx_actual[demo_args.stand_steps:].mean().item()
+        walk_error = abs(demo_args.vx - walk_vx)
+        print(f"  站立阶段: {demo_args.stand_steps * sim_dt:.1f} s, 平均 vx={stand_vx:.3f} m/s")
+        print(f"  行走阶段: {(n_steps - demo_args.stand_steps) * sim_dt:.1f} s, 平均 vx={walk_vx:.3f} m/s")
+        print(f"  行走速度跟踪误差 |vx_cmd - vx|: {walk_error:.4f} m/s")
+    else:
+        print(f"  实际平均线速度 vx: {vx_actual_mean.mean().item():.3f} m/s")
+        print(f"  速度跟踪误差 |vx_cmd - vx|: {vx_error.mean().item():.4f} m/s")
     print(f"  平均行走距离: {dist.mean().item():.2f} m")
     print(f"  平均 episode 长度: {ep_len_mean:.0f} 步（20s 上限 = {env.max_episode_length} 步）")
     print(f"  摔倒/重置次数: {falls.sum().item()} / {n_robots}")
-    print(f"  vx 达标的机器人占比（误差<0.2）: {(vx_error < 0.2).float().mean().item() * 100:.0f}%")
+    if mode != "assessment":
+        print(f"  vx 达标的机器人占比（误差<0.2）: {(vx_error < 0.2).float().mean().item() * 100:.0f}%")
+    if demo_args.frame_dir:
+        print(f"  已保存 viewer 帧: {frame_index} 张 -> {demo_args.frame_dir}")
     print("=" * 60)
 
 
