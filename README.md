@@ -86,8 +86,9 @@ python legged_gym/legged_gym/scripts/play.py --task=a1
 | 平地行走（vx=1.0） | **0.999 m/s，误差 0.35%，100% 达标** |
 | 粗糙地形行走（vx=1.0） | 0.88-0.95 m/s，84% 达标（32 机器人统计） |
 | 演示视频 | `results/videos/demo_assessment_stand_walk.mp4`（一个视频连续展示站立与直线行走） |
+| 训练 checkpoint | 邮件提交 ZIP：`results/checkpoints/model_3000.pt`（本机实际训练所得，不进入公开 GitHub 仓库） |
 
-训练曲线见 [results/curves/](results/curves/)，奖励实验见 [dev_notes/奖励实验分析.md](dev_notes/奖励实验分析.md)，训练原理见 [dev_notes/训练原理说明.md](dev_notes/训练原理说明.md)。
+训练曲线见 [results/curves/](results/curves/)，奖励实验见 [dev_notes/奖励实验分析.md](dev_notes/奖励实验分析.md)，训练原理见 [dev_notes/训练原理说明.md](dev_notes/训练原理说明.md)，最终权重来源与校验值见 [dev_notes/checkpoint说明.md](dev_notes/checkpoint说明.md)。
 
 ## 演示视频
 
@@ -118,8 +119,8 @@ python scripts/play_demo.py --task=a1 --mode=assessment --vx=1.0 \
 ├── rsl_rl/            # PPO 算法库（v1.0.2）
 ├── scripts/           # 自定义脚本（演示/评估、环境激活）
 ├── dev_notes/         # 开发记录、训练原理、奖励实验分析
-├── results/           # 训练曲线、截图、演示视频
-└── pkg/               # Isaac Gym Preview 4 安装包
+├── results/           # 训练曲线、截图、演示视频；邮件 ZIP 另含自训练 checkpoint
+└── pkg/               # Isaac Gym Preview 4 安装包（体积较大，不进入邮件 ZIP）
 ```
 
 ## 致谢
