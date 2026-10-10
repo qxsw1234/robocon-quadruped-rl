@@ -36,11 +36,13 @@ pip install torch==2.3.1 --index-url https://download.pytorch.org/whl/cu121
 # 或: pip install ./pkg/torch-2.3.1+cu121-cp38-cp38-linux_x86_64.whl
 
 # 3. Isaac Gym Preview 4（官方需 NVIDIA 账号，见 https://developer.nvidia.com/isaac-gym）
+#    下载解压后放到本仓库根目录的 isaacgym/（该目录不入库，需自行下载）
 pip install -e ./isaacgym/python --no-deps
 pip install "numpy==1.23.5" scipy pyyaml pillow imageio ninja matplotlib tensorboard
 
 # 4. rsl_rl v1.0.2（旧版 API）
-cd rsl_rl && git checkout v1.0.2 && pip install -e . --no-deps --no-build-isolation
+#    仓库内已内置 v1.0.2 源码副本（rsl_rl/setup.py 已声明 version='1.0.2'），无需再 checkout
+pip install -e ./rsl_rl --no-deps --no-build-isolation
 
 # 5. legged_gym
 pip install -e ./legged_gym --no-deps
@@ -55,7 +57,7 @@ export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 ```bash
 # 基线训练（A1，粗糙地形，4096 环境，1500 迭代，headless）
 cd legged_gym/legged_gym/scripts
-source ../../scripts/leg_env.sh
+source ../../../scripts/leg_env.sh
 python train.py --task=a1 --num_envs=4096 --max_iterations=1500 --headless
 
 # 查看训练曲线
